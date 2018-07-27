@@ -35,10 +35,11 @@ const BacktestResultExporter = function() {
 BacktestResultExporter.prototype.processStratCandle = function(candle) {
   let strippedCandle;
 
-  if(!this.candleProps) {
+  if(true || !this.candleProps) {
     strippedCandle = {
       ...candle,
-      start: candle.start.unix()
+      start: candle.start.unix(),
+      date: candle.start.unix(),
     }
   } else {
     strippedCandle = {

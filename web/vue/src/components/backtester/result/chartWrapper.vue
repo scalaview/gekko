@@ -6,14 +6,13 @@
 
 <script>
 
-import chart from '../../../d3/chart4'
+import candleStickChart from '../../../d3/candleStickChart'
 import { draw as drawMessage, clear as clearMessage } from '../../../d3/message'
 
 const MIN_CANDLES = 4;
 
 export default {
   props: ['data', 'height'],
-
   data: function() {
     return {
       isClicked: false
@@ -36,12 +35,19 @@ export default {
     render: function() {
       this.remove();
 
-
       if(_.size(this.data.candles) < MIN_CANDLES) {
         drawMessage('Not enough data to spawn chart');
-      } else {
-        chart(this.data.candles, this.data.trades, this.height);
+        return
       }
+      if(!window.D3CandleStickChart){
+        window.D3CandleStickChart = candleStickChart()
+      }
+      let candleChart = new D3CandleStickChart(document.getElementById('chart'), {width: window.innerWidth - 20, height: parseInt(this.height)})
+      candleChart.loadData(this.data.candles.map(function (record) {
+        record.date *= 1000;
+        return record;
+      }));
+      candleChart.tradePoints(this.data.trades)
     },
     remove: function() {
       d3.select('#chart').html('');
