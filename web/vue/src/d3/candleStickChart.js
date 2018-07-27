@@ -1,6 +1,6 @@
 
 import utils from 'utilities.js';
-
+import moment from 'moment';
 
 export default function(_data, _trades, _width, _height) {
 
@@ -53,7 +53,6 @@ export default function(_data, _trades, _width, _height) {
     props = utils.isPlainObject(props) ? props : {};
 
     // load any data in the props
-    this.loadData(props.data);
 
     this.width  = props.width;
     this.height = props.height;
@@ -86,6 +85,8 @@ export default function(_data, _trades, _width, _height) {
     this[PROP_COL_LABVOLFG]  = props.colorLabelVolumeForeground || '#bbb';
     this[PROP_LAB_FAM]       = props.labelFontFamily            || 'Ubuntu';
     this[PROP_LAB_SIZE]      = props.labelFontSize              || 10;
+
+    this.loadData(props.data);
   }
 
   function redrawIdent () {
@@ -335,13 +336,11 @@ export default function(_data, _trades, _width, _height) {
     stemWidth = barWidth * 0.15,
     group = svg.append('g')
       .attr('class', 'candles')
-      .attr('transform', 'translate('+[coord.x, coord.y].join(' ') +')'),
-    calcDateX = d3.scaleLinear()
-      .domain([scales.dateLow, scales.dateHigh])
-        .range([0, coord.w - barWidth]),
-    calcRY = d3.scaleLinear()
-      .domain([scales.lowestLow, scales.highestHigh])
-        .range([coord.h - margin, margin]);
+      .attr('transform', 'translate('+[coord.x, coord.y].join(' ') +')')
+    this.initCalcDateXAndCalcRY(this.data)
+    var
+    calcDateX = this.calcDateX,
+    calcRY = this.calcRY
 
     if(stemWidth < 1)  {
       stemWidth = 1;
@@ -400,11 +399,32 @@ export default function(_data, _trades, _width, _height) {
     return svg;
   };
 
+  D3CandleStickChart.prototype.initCalcDateXAndCalcRY = function(data){
+    var
+    scales = this.getScales(data),
+    coord =  this.coordCandles(),
+    margin        = this.marginCandle || 0,
+    approxW  = (coord.w / data.length),
+    barSpace = approxW * this.barSpacing,
+    barWidth = approxW - barSpace
+    if(barWidth < 1)  {
+      barWidth = 1;
+    }
+
+    this.calcDateX = d3.scaleLinear()
+              .domain([scales.dateLow, scales.dateHigh])
+                .range([0, coord.w - barWidth]),
+    this.calcRY = d3.scaleLinear()
+              .domain([scales.lowestLow, scales.highestHigh])
+                .range([coord.h - margin, margin]);
+
+  }
+
 
   D3CandleStickChart.prototype.tradePoints =  function (_trades) {
     var svg = this.svg,
-        x = d3.scaleUtc().range([0, this.width]),
-        y = d3.scaleLinear().range([this.height, 0])
+        calcDateX = this.calcDateX,
+        calcRY = this.calcRY
     const toDate = i => {
       if(_.isNumber(i)) {
         return moment.unix(i).utc().toDate();
@@ -415,20 +435,20 @@ export default function(_data, _trades, _width, _height) {
     const trades = _trades.map(t => {
       return {
         price: t.price,
-        date: t.date * 1000,
+        date: moment.utc(t.date).toDate(),
         action: t.action
       }
     });
 
     svg
     .append('g')
-    .attr("transform", "translate(20, 40)")
+    .attr("transform", "translate(0, 0)")
       .selectAll("circle")
       .data(trades)
       .enter().append("circle")
         .attr('class', function(d) { return d.action })
-        .attr("cx", function(d) { return x(d.date); })
-        .attr("cy", function(d) { return y(d.price); })
+        .attr("cx", function(d) { return calcDateX(d.date); })
+        .attr("cy", function(d) { return calcRY(d.price); })
         .attr('r', 5);
   }
 
@@ -454,6 +474,24 @@ export default function(_data, _trades, _width, _height) {
     svg.selectAll('g.volume').remove();
     return this;
   };
+
+  D3CandleStickChart.prototype.smaLine = function (svg, scales) {
+    var
+    calcDateX = this.calcDateX,
+    calcRY = this.calcRY
+
+    var line = d3.line()
+                  .x(function(d) { return calcDateX(d.date); })
+                  .y(function(d) { return calcRY((d.sma || d.close)); });
+    var focus = svg.append("g")
+      .attr("class", "focus")
+      .attr("transform", "translate(0, 0)");
+    focus.append("path")
+      .datum(this.data)
+      .attr("class", "line price")
+      .attr("d", line);
+    return svg;
+  }
 
   D3CandleStickChart.prototype.redrawVolume = function (svg, scales) {
     var
@@ -507,13 +545,13 @@ export default function(_data, _trades, _width, _height) {
       .attr('stroke-linecap', 'butt')
       .attr('stroke-rendering', 'crispEdges')
       .attr('height', function (d) {
-        return calcVolHeight(d[propVol]) || 0;
+        return calcVolHeight(d[propVol]);
       })
       .attr('x', function (d) {
-        return calcDateX(d[propDate])||0;
+        return calcDateX(d[propDate]);
       })
       .attr('y', function (d) {
-        return (coord.h - (parseInt(this.getAttribute('height'))||0));
+        return (coord.h - (parseInt(this.getAttribute('height'))));
       });
 
     return svg;
@@ -688,6 +726,7 @@ export default function(_data, _trades, _width, _height) {
     this.redrawCandles(svg, scales);
     this.redrawVolume(svg, scales);
     this.redrawLabels(svg, scales);
+    this.smaLine(svg, scales);
   };
 
   D3CandleStickChart.prototype.initView = function (svg) {

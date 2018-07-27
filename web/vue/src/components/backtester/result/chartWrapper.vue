@@ -8,6 +8,7 @@
 
 import candleStickChart from '../../../d3/candleStickChart'
 import { draw as drawMessage, clear as clearMessage } from '../../../d3/message'
+import { sma } from '../../../indicators/sma';
 
 const MIN_CANDLES = 4;
 
@@ -34,7 +35,8 @@ export default {
     },
     render: function() {
       this.remove();
-
+      let data = this.data.candles;
+      var result = sma(data, 10, function(n){ return n})
       if(_.size(this.data.candles) < MIN_CANDLES) {
         drawMessage('Not enough data to spawn chart');
         return
@@ -47,7 +49,10 @@ export default {
         record.date *= 1000;
         return record;
       }));
-      candleChart.tradePoints(this.data.trades)
+      candleChart.tradePoints(this.data.trades.map(function (record) {
+        record.date *= 1000;
+        return record;
+      }))
     },
     remove: function() {
       d3.select('#chart').html('');
@@ -100,11 +105,11 @@ export default {
 }*/
 
 #chart circle.buy {
-  fill: #7FFF00;
+  fill: #03a9f4;
 }
 
 #chart circle.sell {
-  fill: red;
+  fill: #fff;
 }
 
 </style>
