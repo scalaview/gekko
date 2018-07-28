@@ -36,7 +36,19 @@ export default {
     render: function() {
       this.remove();
       let data = this.data.candles;
-      var result = sma(data, 10, function(n){ return n})
+      // biance ma n = 7, 25, 99
+      sma(data, 7, function(e, idx){
+        if(idx>=7){
+          data[idx-1]['sma_7'] = e
+        }
+       return e
+      })
+      sma(data, 25, function(e, idx){
+          if(idx>=25){
+            data[idx-1]['sma_25'] = e
+          }
+         return e
+       })
       if(_.size(this.data.candles) < MIN_CANDLES) {
         drawMessage('Not enough data to spawn chart');
         return
@@ -95,7 +107,14 @@ export default {
 
 #chart .line {
   fill: none;
-  stroke: steelblue;
+  stroke: hotpink;
+  stroke-width: 1.5px;
+  clip-path: url(#clip);
+}
+
+#chart .line7 {
+  fill: none;
+  stroke: yellow;
   stroke-width: 1.5px;
   clip-path: url(#clip);
 }

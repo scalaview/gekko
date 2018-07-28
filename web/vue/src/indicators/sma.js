@@ -32,9 +32,9 @@ export const sma = function (arr, range, format) {
   var len = arr.length + 1;
   var idx = num - 1;
   while (++idx < len) {
-    res.push(fn(avg(arr, idx, idx < num ? idx : num)));
+    res.push(fn(avg(arr, idx, idx < num ? idx : num), idx));
   }
-  return arr;
+  return res;
 }
 
 /**
@@ -51,8 +51,7 @@ export const sma = function (arr, range, format) {
  */
 
 function avg(arr, idx, range) {
-  arr[idx-1]['sma'] = sum(arr.slice(idx - range, idx)) / range;
-  return arr[idx-1]['sma'];
+  return sum(arr.slice(idx - range, idx)) / range;
 }
 
 /**
@@ -76,7 +75,7 @@ function sum(arr) {
  * @return {String} Formatted number.
  */
 
-function toFixed(n) {
+function toFixed(n, idx) {
   return n.toFixed(2);
 }
 

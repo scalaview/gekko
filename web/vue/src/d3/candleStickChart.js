@@ -482,7 +482,7 @@ export default function(_data, _trades, _width, _height) {
 
     var line = d3.line()
                   .x(function(d) { return calcDateX(d.date); })
-                  .y(function(d) { return calcRY((d.sma || d.close)); });
+                  .y(function(d) { return calcRY((d.sma_25 || d.close)); });
     var focus = svg.append("g")
       .attr("class", "focus")
       .attr("transform", "translate(0, 0)");
@@ -490,6 +490,20 @@ export default function(_data, _trades, _width, _height) {
       .datum(this.data)
       .attr("class", "line price")
       .attr("d", line);
+    try{
+      var line2 = d3.line()
+                  .x(function(d) { return calcDateX(d.date); })
+                  .y(function(d) { return calcRY((d.sma_7 || d.close)); });
+      var focus2 = svg.append("g")
+        .attr("class", "focus")
+        .attr("transform", "translate(0, 0)");
+      focus2.append("path")
+        .datum(this.data)
+        .attr("class", "line7 price")
+        .attr("d", line2);
+    }catch(e){
+      console.log(e)
+    }
     return svg;
   }
 
