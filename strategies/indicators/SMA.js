@@ -1,5 +1,5 @@
 // required indicators
-// Simple Moving Average - O(1) implementation 
+// Simple Moving Average - O(1) implementation
 
 var Indicator = function(windowLength) {
   this.input = 'price';
@@ -8,14 +8,22 @@ var Indicator = function(windowLength) {
   this.result = 0;
   this.age = 0;
   this.sum = 0;
+  this.diff = [];
+  this.price = 0;
 }
 
 Indicator.prototype.update = function(price) {
   var tail = this.prices[this.age] || 0; // oldest price in window
+  this.price = price;
   this.prices[this.age] = price;
   this.sum += price - tail;
   this.result = this.sum / this.prices.length;
   this.age = (this.age + 1) % this.windowLength
+  if(this.diff.length >= this.windowLength){
+    this.diff.shift()
+  }
+  this.diff.push({price: price,
+                  diff: price - this.result})
 }
 
 module.exports = Indicator;
