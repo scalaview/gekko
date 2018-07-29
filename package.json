@@ -39,6 +39,7 @@
     "koa-static": "^2.0.0",
     "lakebtc_nodejs": "0.1.x",
     "lodash": "2.x",
+    "mathjs": "^5.0.4",
     "moment": "^2.20.1",
     "node-wex": "^1.0.3",
     "node.bittrex.api": "^0.4.3",
